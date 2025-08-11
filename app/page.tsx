@@ -1158,18 +1158,32 @@ export default function Home() {
           {activeTab === "indicadores" && (
             <div className="bg-black/10 backdrop-blur-sm rounded-lg shadow-md p-4 md:p-6">
               <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-white drop-shadow-lg">
-                Dashboard - Formulários de Logística
+                Total de Operações
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-6">
                 <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
                   <CardContent className="p-4 md:p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-xs md:text-sm font-medium text-gray-600">Total Formulários</p>
+                        <p className="text-xs md:text-sm font-medium text-gray-600">Total Paletes</p>
+                        <p className="text-xl md:text-2xl font-bold text-gray-900">
+                          {formularios.reduce((total, f) => total + (Number.parseInt(f.pallets) || 0), 0)}
+                        </p>
+                      </div>
+                      <Package className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs md:text-sm font-medium text-gray-600">Total CTEs</p>
                         <p className="text-xl md:text-2xl font-bold text-gray-900">{formularios.length}</p>
                       </div>
-                      <FileText className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+                      <FileText className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
                     </div>
                   </CardContent>
                 </Card>
@@ -1183,7 +1197,7 @@ export default function Home() {
                           {formularios.filter((f) => f.tipoOperacao === "Carga").length}
                         </p>
                       </div>
-                      <Truck className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
+                      <Truck className="w-6 h-6 md:w-8 md:h-8 text-orange-600" />
                     </div>
                   </CardContent>
                 </Card>
@@ -1197,7 +1211,7 @@ export default function Home() {
                           {formularios.filter((f) => f.tipoOperacao === "Descarga").length}
                         </p>
                       </div>
-                      <Package className="w-6 h-6 md:w-8 md:h-8 text-orange-600" />
+                      <Package className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
                     </div>
                   </CardContent>
                 </Card>
@@ -1214,7 +1228,59 @@ export default function Home() {
                           }
                         </p>
                       </div>
-                      <Calendar className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
+                      <Calendar className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+                  <CardContent className="p-4 md:p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quantidade por Transportadora</h3>
+                    <div className="space-y-2">
+                      {Object.entries(
+                        formularios.reduce(
+                          (acc, f) => {
+                            acc[f.transportadora] = (acc[f.transportadora] || 0) + 1
+                            return acc
+                          },
+                          {} as Record<string, number>,
+                        ),
+                      )
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5)
+                        .map(([transportadora, quantidade]) => (
+                          <div key={transportadora} className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600 truncate">{transportadora}</span>
+                            <span className="text-sm font-semibold text-gray-900">{quantidade}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
+                  <CardContent className="p-4 md:p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quantidade por Destino/Origem</h3>
+                    <div className="space-y-2">
+                      {Object.entries(
+                        formularios.reduce(
+                          (acc, f) => {
+                            acc[f.destinoOrigem] = (acc[f.destinoOrigem] || 0) + 1
+                            return acc
+                          },
+                          {} as Record<string, number>,
+                        ),
+                      )
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5)
+                        .map(([destino, quantidade]) => (
+                          <div key={destino} className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600 truncate">{destino}</span>
+                            <span className="text-sm font-semibold text-gray-900">{quantidade}</span>
+                          </div>
+                        ))}
                     </div>
                   </CardContent>
                 </Card>
