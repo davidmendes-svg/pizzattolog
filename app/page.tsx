@@ -521,12 +521,16 @@ export default function Home() {
   useEffect(() => {
     if (fotosSeguranca.length > 1) {
       const interval = setInterval(() => {
-        setCurrentPhotoIndex((prev) => (prev + 1) % fotosSeguranca.length)
+        setCurrentPhotoIndex((prev) => {
+          // Verificação adicional para evitar índices inválidos
+          if (fotosSeguranca.length === 0) return 0
+          return (prev + 1) % fotosSeguranca.length
+        })
       }, 3000) // Muda foto a cada 3 segundos
 
       return () => clearInterval(interval)
     }
-  }, [fotosSeguranca.length])
+  }, [fotosSeguranca.length, fotosSeguranca])
 
   return (
     <div
@@ -985,7 +989,7 @@ export default function Home() {
                   <div className="relative max-w-2xl mx-auto">
                     <div className="flex justify-center mb-4">
                       <img
-                        src={fotosSeguranca[currentPhotoIndex].foto || "/placeholder.svg"}
+                        src={fotosSeguranca[currentPhotoIndex]?.foto || "/placeholder.svg"}
                         alt={`Foto de segurança ${currentPhotoIndex + 1}`}
                         className="w-full h-64 md:h-80 lg:h-96 object-cover rounded-lg shadow-lg"
                       />
@@ -1006,7 +1010,7 @@ export default function Home() {
                     </div>
 
                     <p className="text-center text-xs md:text-sm text-white drop-shadow">
-                      Data: {fotosSeguranca[currentPhotoIndex].data}
+                      Data: {fotosSeguranca[currentPhotoIndex]?.data || "N/A"}
                     </p>
                   </div>
                 )}
