@@ -101,7 +101,29 @@ export default function Home() {
   const [formularios, setFormularios] = useState<FormData[]>([])
 
   // Estados para colaboradores
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>([
+    {
+      id: 1,
+      nome: "João Silva",
+      cargo: "Operador de Empilhadeira",
+      turno: "1° turno",
+      foto: "/professional-man.png",
+    },
+    {
+      id: 2,
+      nome: "Maria Santos",
+      cargo: "Supervisora de Logística",
+      turno: "2° turno",
+      foto: "/professional-woman-diverse.png",
+    },
+    {
+      id: 3,
+      nome: "Carlos Oliveira",
+      cargo: "Conferente",
+      turno: "3° turno",
+      foto: "/professional-person.png",
+    },
+  ])
   const [showColabPassword, setShowColabPassword] = useState(false)
   const [showColabForm, setShowColabForm] = useState(false)
   const [colabPassword, setColabPassword] = useState("")
