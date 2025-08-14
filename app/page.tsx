@@ -542,12 +542,13 @@ export default function Home() {
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
 
-    if (activeTab === "seguranca" && fotosSeguranca.length > 1) {
+    if (activeTab === "seguranca" && fotosSeguranca && fotosSeguranca.length > 1) {
       interval = setInterval(() => {
         setCurrentPhotoIndex((prev) => {
-          // Verificação dupla para evitar erros
+          // Verificação tripla para evitar erros
           if (!fotosSeguranca || fotosSeguranca.length === 0) return 0
-          return (prev + 1) % fotosSeguranca.length
+          const nextIndex = (prev + 1) % fotosSeguranca.length
+          return nextIndex
         })
       }, 3000)
     }
@@ -558,15 +559,20 @@ export default function Home() {
         interval = null
       }
     }
-  }, [activeTab])
+  }, [activeTab, fotosSeguranca]) // Adicionando fotosSeguranca.length como dependência
 
   useEffect(() => {
     return () => {
       setCurrentPhotoIndex(0)
-      // Forçar limpeza de qualquer timer pendente
-      const highestId = setTimeout(() => {}, 0)
-      for (let i = 0; i < highestId; i++) {
+      // Limpeza mais robusta de timers
+      const timers = []
+      const highestTimeoutId = setTimeout(() => {}, 0)
+      const highestIntervalId = setInterval(() => {}, 9999)
+
+      for (let i = 0; i <= highestTimeoutId; i++) {
         clearTimeout(i)
+      }
+      for (let i = 0; i <= highestIntervalId; i++) {
         clearInterval(i)
       }
     }
