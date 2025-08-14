@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   generator: 'v0.dev',
 }
 
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || ''
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -17,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <base href={`${BASE_PATH}/`} />
         <style>{`
 html {
   font-family: ${GeistSans.style.fontFamily};

@@ -28,3 +28,36 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+# v0 App
+
+This project is a Next.js App Router site using Supabase.
+
+## Local Development
+
+- Install deps: `pnpm install`
+- Run dev server: `pnpm dev`
+
+## Supabase Configuration
+
+Set the following environment variables (locally and in GitHub repository secrets):
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## GitHub Pages Deployment
+
+This repository includes a GitHub Actions workflow at `.github/workflows/deploy.yml` to build and deploy the site to GitHub Pages.
+
+Notes:
+- The site is exported statically (no server needed) and will read Supabase directly from the browser using the public anon key.
+- For Project Pages (repo `user/repo`), assets are served under `/<repo>`; the workflow sets `NEXT_PUBLIC_BASE_PATH=/<repo>` automatically.
+- If you deploy to a custom domain or a user/organization page (root), you can omit `NEXT_PUBLIC_BASE_PATH`.
+
+### Steps
+1. In GitHub, go to Settings → Secrets and variables → Actions and add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. Push to `main`. The workflow builds and deploys to GitHub Pages.
+3. In Settings → Pages, make sure the source is set to "GitHub Actions".
+
+The output is placed in the `out/` directory during CI and uploaded to Pages. A `.nojekyll` file is added to avoid Jekyll processing.
