@@ -15,25 +15,11 @@ import {
 
 import type React from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import {
-  FileText,
-  Users,
-  Shield,
-  BarChart,
-  Info,
-  Plus,
-  ChevronLeft,
-  ChevronRight,
-  CheckSquare,
-  Truck,
-  Package,
-  Calendar,
-} from "lucide-react"
+import { FileText, Users, Shield, BarChart, Info, CheckSquare, Truck } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface FormData {
@@ -161,6 +147,19 @@ export default function Home() {
   })
   const [showChecklistForm, setShowChecklistForm] = useState(false)
 
+  const [novoChecklist, setNovoChecklist] = useState<Checklist5S>({
+    data: "",
+    responsavel: "",
+    setor: "",
+    items: {
+      seiri: { classificacao: false, observacoes: "" },
+      seiton: { organizacao: false, observacoes: "" },
+      seiso: { limpeza: false, observacoes: "" },
+      seiketsu: { padronizacao: false, observacoes: "" },
+      shitsuke: { disciplina: false, observacoes: "" },
+    },
+  })
+
   useEffect(() => {
     const carregarDados = async () => {
       try {
@@ -186,15 +185,15 @@ export default function Home() {
         } else {
           // Dados padrão se não houver colaboradores no banco
           setColaboradores([
-            { id: 1, nome: "João Silva", cargo: "Operador", turno: "1° turno", foto: "/professional-man.png" },
+            { id: 1, nome: "João Silva", cargo: "Operador", turno: "turno", foto: "/professional-man.png" },
             {
               id: 2,
               nome: "Maria Santos",
               cargo: "Supervisora",
-              turno: "2° turno",
+              turno: "turno",
               foto: "/professional-woman-diverse.png",
             },
-            { id: 3, nome: "Carlos Lima", cargo: "Técnico", turno: "3° turno", foto: "/professional-person.png" },
+            { id: 3, nome: "Carlos Lima", cargo: "Técnico", turno: "turno", foto: "/professional-person.png" },
           ])
         }
 
@@ -326,7 +325,7 @@ export default function Home() {
     }
   }
 
-  const handleDeleteColaborador = async () => {
+  const handleDeleteColaborador = async (id: number) => {
     if (colaboradorToDelete) {
       try {
         const result = await excluirColaborador(colaboradorToDelete)
@@ -470,7 +469,7 @@ export default function Home() {
         seiton_status: currentChecklist.items.seiton.organizacao,
         seiton_observacao: currentChecklist.items.seiton.observacoes,
         seiso_status: currentChecklist.items.seiso.limpeza,
-        seiso_observacao: currentChecklist.items.seiso.observacoes,
+        observacoes: currentChecklist.items.seiso.observacoes,
         seiketsu_status: currentChecklist.items.seiketsu.padronizacao,
         seiketsu_observacao: currentChecklist.items.seiketsu.observacoes,
         shitsuke_status: currentChecklist.items.shitsuke.disciplina,
@@ -519,18 +518,37 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (fotosSeguranca.length > 1) {
-      const interval = setInterval(() => {
+    let interval: NodeJS.Timeout | null = null
+
+    if (activeTab === "seguranca" && fotosSeguranca.length > 1) {
+      interval = setInterval(() => {
         setCurrentPhotoIndex((prev) => {
-          // Verificação adicional para evitar índices inválidos
-          if (fotosSeguranca.length === 0) return 0
+          // Verificação dupla para evitar erros
+          if (!fotosSeguranca || fotosSeguranca.length === 0) return 0
           return (prev + 1) % fotosSeguranca.length
         })
-      }, 3000) // Muda foto a cada 3 segundos
-
-      return () => clearInterval(interval)
+      }, 3000)
     }
-  }, [fotosSeguranca.length, fotosSeguranca])
+
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+        interval = null
+      }
+    }
+  }, [activeTab])
+
+  useEffect(() => {
+    return () => {
+      setCurrentPhotoIndex(0)
+      // Forçar limpeza de qualquer timer pendente
+      const highestId = setTimeout(() => {}, 0)
+      for (let i = 0; i < highestId; i++) {
+        clearTimeout(i)
+        clearInterval(i)
+      }
+    }
+  }, [])
 
   return (
     <div
@@ -565,7 +583,6 @@ export default function Home() {
         </nav>
 
         <main className="container mx-auto p-4 md:p-6 max-w-7xl">
-          {/* Aba Formulário */}
           {activeTab === "formulario" && (
             <div className="space-y-6">
               <div className="bg-black/10 backdrop-blur-sm rounded-xl shadow-2xl border border-white/20 p-6 md:p-8">
@@ -750,7 +767,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Aba Colaboradores */}
           {activeTab === "colaboradores" && (
             <div className="bg-black/10 backdrop-blur-sm rounded-lg shadow-md p-4 md:p-6 relative">
               <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-white drop-shadow-lg">Colaboradores</h2>
@@ -780,511 +796,289 @@ export default function Home() {
                 ))}
               </div>
 
-              <Button
-                onClick={() => setShowColabPassword(true)}
-                className="fixed bottom-6 right-4 md:right-6 w-12 h-12 md:w-14 md:h-14 rounded-full bg-green-600 hover:bg-green-700 shadow-lg z-50"
-              >
-                <Plus className="w-5 h-5 md:w-6 md:h-6" />
-              </Button>
+              {/* Botão flutuante para adicionar colaborador */}
+              {activeTab === "colaboradores" && (
+                <button
+                  onClick={() => setShowColabPassword(true)}
+                  className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl font-bold transition-all transform hover:scale-110 z-50"
+                >
+                  +
+                </button>
+              )}
             </div>
           )}
 
-          {/* Modal de senha para colaboradores */}
-          <Dialog open={showColabPassword} onOpenChange={setShowColabPassword}>
-            <DialogContent className="bg-white/95 backdrop-blur-sm">
-              <DialogHeader>
-                <DialogTitle>Acesso Restrito</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  type="password"
-                  placeholder="Digite a senha"
-                  value={colabPassword}
-                  onChange={(e) => setColabPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleColabPasswordSubmit()}
-                />
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowColabPassword(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleColabPasswordSubmit}>Confirmar</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Modal de formulário para adicionar colaborador */}
-          <Dialog open={showColabForm} onOpenChange={setShowColabForm}>
-            <DialogContent className="bg-white/95 backdrop-blur-sm max-w-md">
-              <DialogHeader>
-                <DialogTitle>Adicionar Colaborador</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Nome completo"
-                  value={novoColaborador.nome}
-                  onChange={(e) => setNovoColaborador({ ...novoColaborador, nome: e.target.value })}
-                />
-                <Input
-                  placeholder="Cargo"
-                  value={novoColaborador.cargo}
-                  onChange={(e) => setNovoColaborador({ ...novoColaborador, cargo: e.target.value })}
-                />
-                <Select
-                  value={novoColaborador.turno}
-                  onValueChange={(value) => setNovoColaborador({ ...novoColaborador, turno: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o turno" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1° turno">1° turno</SelectItem>
-                    <SelectItem value="2° turno">2° turno</SelectItem>
-                    <SelectItem value="3° turno">3° turno</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (e) => {
-                        setNovoColaborador({ ...novoColaborador, foto: e.target?.result as string })
-                      }
-                      reader.readAsDataURL(file)
-                    }
-                  }}
-                />
-                {novoColaborador.foto && (
-                  <div className="mt-2">
-                    <img
-                      src={novoColaborador.foto || "/placeholder.svg"}
-                      alt="Preview"
-                      className="w-20 h-20 object-cover rounded-lg"
-                    />
-                  </div>
-                )}
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowColabForm(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleAddColaborador}>Adicionar</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={showDeletePassword} onOpenChange={setShowDeletePassword}>
-            <DialogContent className="bg-white">
-              <DialogHeader>
-                <DialogTitle>Confirmar Exclusão</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <p className="text-gray-600">Digite a senha para excluir o colaborador:</p>
-                <Input
-                  type="password"
-                  placeholder="Digite a senha"
-                  value={deletePassword}
-                  onChange={(e) => setDeletePassword(e.target.value)}
-                />
-                <div className="flex gap-2">
-                  <Button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-600">
-                    Confirmar Exclusão
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowDeletePassword(false)
-                      setDeletePassword("")
-                      setColaboradorToDelete(null)
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Aba Segurança */}
-          {/* Modal de senha para segurança */}
-          <Dialog open={showSegPassword} onOpenChange={setShowSegPassword}>
-            <DialogContent className="bg-white/95 backdrop-blur-sm">
-              <DialogHeader>
-                <DialogTitle>Acesso Restrito - Segurança</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input
-                  type="password"
-                  placeholder="Digite a senha"
-                  value={segPassword}
-                  onChange={(e) => setSegPassword(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSegPasswordSubmit()}
-                />
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowSegPassword(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSegPasswordSubmit}>Confirmar</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* Modal de formulário para adicionar foto de segurança */}
-          <Dialog open={showSegForm} onOpenChange={setShowSegForm}>
-            <DialogContent className="bg-white/95 backdrop-blur-sm">
-              <DialogHeader>
-                <DialogTitle>Adicionar Foto de Segurança</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Selecionar Foto</label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        const reader = new FileReader()
-                        reader.onload = (e) => {
-                          setNovaFoto({
-                            file: file,
-                            preview: e.target?.result as string,
-                          })
-                        }
-                        reader.readAsDataURL(file)
-                      }
-                    }}
-                  />
-                  {novaFoto.preview && (
-                    <div className="mt-2">
-                      <img
-                        src={novaFoto.preview || "/placeholder.svg"}
-                        alt="Preview"
-                        className="w-32 h-32 object-cover rounded-lg"
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowSegForm(false)}>
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleAddSeguranca}>Adicionar Foto</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
           {activeTab === "seguranca" && (
             <div className="bg-black/10 backdrop-blur-sm rounded-lg shadow-md p-4 md:p-6 relative">
               <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-white drop-shadow-lg">
                 Diálogos de Segurança
               </h2>
 
-              <div className="mb-20">
-                {fotosSeguranca.length > 0 && (
-                  <div className="relative max-w-2xl mx-auto">
-                    <div className="flex justify-center mb-4">
-                      <img
-                        src={fotosSeguranca[currentPhotoIndex]?.foto || "/placeholder.svg"}
-                        alt={`Foto de segurança ${currentPhotoIndex + 1}`}
-                        className="w-full h-64 md:h-80 lg:h-96 object-cover rounded-lg shadow-lg"
-                      />
-                    </div>
-
-                    <div className="flex justify-between items-center mb-4 px-4">
-                      <Button variant="outline" onClick={prevPhoto} disabled={fotosSeguranca.length <= 1} size="sm">
-                        <ChevronLeft className="w-4 h-4" />
-                      </Button>
-
-                      <span className="text-xs md:text-sm text-white drop-shadow">
-                        {currentPhotoIndex + 1} de {fotosSeguranca.length}
-                      </span>
-
-                      <Button variant="outline" onClick={nextPhoto} disabled={fotosSeguranca.length <= 1} size="sm">
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-
-                    <p className="text-center text-xs md:text-sm text-white drop-shadow">
-                      Data: {fotosSeguranca[currentPhotoIndex]?.data || "N/A"}
-                    </p>
+              {fotosSeguranca.length > 0 ? (
+                <div className="relative w-full max-w-2xl mx-auto">
+                  <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden shadow-lg">
+                    <img
+                      src={fotosSeguranca[currentPhotoIndex]?.foto || "/placeholder.svg"}
+                      alt={`Foto de segurança ${currentPhotoIndex + 1}`}
+                      className="w-full h-80 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg"
+                      }}
+                    />
                   </div>
-                )}
-              </div>
 
-              <Button
-                onClick={() => setShowSegPassword(true)}
-                className="fixed bottom-6 right-4 md:right-6 w-12 h-12 md:w-14 md:h-14 rounded-full bg-green-600 hover:bg-green-700 shadow-lg z-50"
-              >
-                <Plus className="w-5 h-5 md:w-6 md:h-6" />
-              </Button>
+                  {fotosSeguranca.length > 1 && (
+                    <>
+                      <button
+                        onClick={() =>
+                          setCurrentPhotoIndex((prev) => (prev === 0 ? fotosSeguranca.length - 1 : prev - 1))
+                        }
+                        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                      >
+                        ←
+                      </button>
+                      <button
+                        onClick={() => setCurrentPhotoIndex((prev) => (prev + 1) % fotosSeguranca.length)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+                      >
+                        →
+                      </button>
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                        {currentPhotoIndex + 1} / {fotosSeguranca.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-white text-lg">Nenhuma foto de segurança adicionada ainda.</p>
+                </div>
+              )}
+
+              {/* Botão flutuante para adicionar foto de segurança */}
+              {activeTab === "seguranca" && (
+                <button
+                  onClick={() => setShowSegPassword(true)}
+                  className="fixed bottom-6 right-6 w-14 h-14 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl font-bold transition-all transform hover:scale-110 z-50"
+                >
+                  +
+                </button>
+              )}
             </div>
           )}
 
-          {/* Aba Checklist 5S */}
           {activeTab === "checklist5s" && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">Checklist 5S</h2>
-                  <p className="text-white drop-shadow mt-2">Metodologia de organização e melhoria contínua</p>
-                </div>
-              </div>
+            <div className="bg-black/10 backdrop-blur-sm rounded-lg shadow-md p-4 md:p-6 relative">
+              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-white drop-shadow-lg">Checklist 5S</h2>
 
-              {/* Lista de Checklists */}
-              <div className="grid gap-4 md:gap-6">
-                {checklist5S.map((item, index) => (
-                  <Card
-                    key={index}
-                    className="hover:shadow-md transition-shadow bg-black/10 backdrop-blur-sm border-white/20"
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <div>
-                          <CardTitle className="text-lg text-white">{item.data}</CardTitle>
-                          <CardDescription className="text-white/80">
-                            Responsável: {item.responsavel} | Setor: {item.setor}
-                          </CardDescription>
-                        </div>
-                        <div className="flex gap-2">
-                          {Object.values(item.items).every(
-                            (i) => i.classificacao || i.organizacao || i.limpeza || i.padronizacao || i.disciplina,
-                          ) ? (
-                            <Badge variant="default" className="bg-green-100 text-green-800">
-                              Completo
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">Pendente</Badge>
-                          )}
-                        </div>
-                      </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-20">
+                {checklist5S.map((checklist) => (
+                  <Card key={checklist.data} className="bg-white/90 backdrop-blur-sm">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-gray-900">
+                        {new Date(checklist.data).toLocaleDateString("pt-BR")}
+                      </CardTitle>
+                      <p className="text-sm text-gray-600">
+                        {checklist.responsavel} - {checklist.setor}
+                      </p>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <div className="text-center">
-                          <div
-                            className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                              item.items.seiri.classificacao
-                                ? "bg-green-100 text-green-600"
-                                : "bg-gray-100 text-gray-400"
-                            }`}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Seiri (Classificação)</span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${checklist.items.seiri.classificacao ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                           >
-                            {item.items.seiri.classificacao ? "✓" : "○"}
-                          </div>
-                          <p className="text-sm font-medium text-white">Seiri</p>
-                          <p className="text-xs text-white/60">Classificação</p>
+                            {checklist.items.seiri.classificacao ? "OK" : "Pendente"}
+                          </span>
                         </div>
-                        <div className="text-center">
-                          <div
-                            className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                              item.items.seiton.organizacao
-                                ? "bg-green-100 text-green-600"
-                                : "bg-gray-100 text-gray-400"
-                            }`}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Seiton (Organização)</span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${checklist.items.seiton.organizacao ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                           >
-                            {item.items.seiton.organizacao ? "✓" : "○"}
-                          </div>
-                          <p className="text-sm font-medium text-white">Seiton</p>
-                          <p className="text-xs text-white/60">Organização</p>
+                            {checklist.items.seiton.organizacao ? "OK" : "Pendente"}
+                          </span>
                         </div>
-                        <div className="text-center">
-                          <div
-                            className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                              item.items.seiso.limpeza ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-400"
-                            }`}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Seiso (Limpeza)</span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${checklist.items.seiso.limpeza ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                           >
-                            {item.items.seiso.limpeza ? "✓" : "○"}
-                          </div>
-                          <p className="text-sm font-medium text-white">Seiso</p>
-                          <p className="text-xs text-white/60">Limpeza</p>
+                            {checklist.items.seiso.limpeza ? "OK" : "Pendente"}
+                          </span>
                         </div>
-                        <div className="text-center">
-                          <div
-                            className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                              item.items.seiketsu.padronizacao
-                                ? "bg-green-100 text-green-600"
-                                : "bg-gray-100 text-gray-400"
-                            }`}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Seiketsu (Padronização)</span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${checklist.items.seiketsu.padronizacao ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                           >
-                            {item.items.seiketsu.padronizacao ? "✓" : "○"}
-                          </div>
-                          <p className="text-sm font-medium text-white">Seiketsu</p>
-                          <p className="text-xs text-white/60">Padronização</p>
+                            {checklist.items.seiketsu.padronizacao ? "OK" : "Pendente"}
+                          </span>
                         </div>
-                        <div className="text-center">
-                          <div
-                            className={`w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center ${
-                              item.items.shitsuke.disciplina
-                                ? "bg-green-100 text-green-600"
-                                : "bg-gray-100 text-gray-400"
-                            }`}
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Shitsuke (Disciplina)</span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${checklist.items.shitsuke.disciplina ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                           >
-                            {item.items.shitsuke.disciplina ? "✓" : "○"}
-                          </div>
-                          <p className="text-sm font-medium text-white">Shitsuke</p>
-                          <p className="text-xs text-white/60">Disciplina</p>
+                            {checklist.items.shitsuke.disciplina ? "OK" : "Pendente"}
+                          </span>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
-
-                {checklist5S.length === 0 && (
-                  <Card className="text-center py-12 bg-black/10 backdrop-blur-sm border-white/20">
-                    <CardContent>
-                      <CheckSquare className="w-12 h-12 mx-auto text-white/60 mb-4" />
-                      <h3 className="text-lg font-medium text-white drop-shadow mb-2">Nenhum checklist cadastrado</h3>
-                      <p className="text-white/80 drop-shadow">
-                        Clique no botão + para adicionar seu primeiro checklist 5S
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
 
+              {/* Botão flutuante para adicionar checklist */}
               {activeTab === "checklist5s" && (
-                <Button
+                <button
                   onClick={() => setShowChecklistForm(true)}
-                  className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-green-600 hover:bg-green-700 text-white shadow-lg z-50"
-                  size="icon"
+                  className="fixed bottom-6 right-6 w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg flex items-center justify-center text-2xl font-bold transition-all transform hover:scale-110 z-50"
                 >
-                  <Plus className="w-6 h-6" />
-                </Button>
+                  +
+                </button>
               )}
             </div>
           )}
 
-          {/* Aba Indicadores */}
           {activeTab === "indicadores" && (
-            <div className="bg-black/10 backdrop-blur-sm rounded-lg shadow-md p-4 md:p-6">
-              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-white drop-shadow-lg">
-                Total de Operações
-              </h2>
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-white drop-shadow-md mb-6">Total de Operações</h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 mb-6">
-                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-gray-600">Total Paletes</p>
-                        <p className="text-xl md:text-2xl font-bold text-gray-900">
-                          {formularios.reduce((total, f) => total + (Number.parseInt(f.pallets) || 0), 0)}
-                        </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">📦</div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {formularios.reduce((total, form) => total + (form.pallets || 0), 0)}
                       </div>
-                      <Package className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
                     </div>
+                    <div className="text-sm text-gray-600">Total de Pallets</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-gray-600">Total CTEs</p>
-                        <p className="text-xl md:text-2xl font-bold text-gray-900">{formularios.length}</p>
-                      </div>
-                      <FileText className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
+                <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-2">📋</div>
+                      <div className="text-2xl font-bold text-green-600">{formularios.length}</div>
                     </div>
+                    <div className="text-sm text-gray-600">Total de CTEs</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-gray-600">Operações Carga</p>
-                        <p className="text-xl md:text-2xl font-bold text-gray-900">
-                          {formularios.filter((f) => f.tipoOperacao === "Carga").length}
-                        </p>
+                <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-2">⬆️</div>
+                      <div className="text-2xl font-bold text-orange-600">
+                        {formularios.filter((f) => f.tipo_operacao === "Carga").length}
                       </div>
-                      <Truck className="w-6 h-6 md:w-8 md:h-8 text-orange-600" />
                     </div>
+                    <div className="text-sm text-gray-600">Operações de Carga</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-gray-600">Operações Descarga</p>
-                        <p className="text-xl md:text-2xl font-bold text-gray-900">
-                          {formularios.filter((f) => f.tipoOperacao === "Descarga").length}
-                        </p>
+                <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-2">⬇️</div>
+                      <div className="text-2xl font-bold text-purple-600">
+                        {formularios.filter((f) => f.tipo_operacao === "Descarga").length}
                       </div>
-                      <Package className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
                     </div>
+                    <div className="text-sm text-gray-600">Operações de Descarga</div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-4 md:p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-xs md:text-sm font-medium text-gray-600">Operações Hoje</p>
-                        <p className="text-xl md:text-2xl font-bold text-gray-900">
-                          {
-                            formularios.filter((f) => f.agendamento.startsWith(new Date().toISOString().split("T")[0]))
-                              .length
-                          }
-                        </p>
-                      </div>
-                      <Calendar className="w-6 h-6 md:w-8 md:h-8 text-red-600" />
+                <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+                  <CardContent className="p-4 text-center">
+                    <div className="flex items-center justify-center mb-2">
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-2">📊</div>
+                      <div className="text-2xl font-bold text-red-600">{formularios.length}</div>
                     </div>
+                    <div className="text-sm text-gray-600">Total de Operações</div>
                   </CardContent>
                 </Card>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-4 md:p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quantidade por Transportadora</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+                  <CardHeader>
+                    <CardTitle className="text-gray-900 flex items-center">
+                      <span className="mr-2">🚛</span>
+                      Top 5 Transportadoras
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-2">
-                      {Object.entries(
-                        formularios.reduce(
-                          (acc, f) => {
-                            acc[f.transportadora] = (acc[f.transportadora] || 0) + 1
+                      {(() => {
+                        const transportadoraCount = formularios.reduce(
+                          (acc, form) => {
+                            if (form.transportadora && form.transportadora.trim()) {
+                              acc[form.transportadora] = (acc[form.transportadora] || 0) + 1
+                            }
                             return acc
                           },
                           {} as Record<string, number>,
-                        ),
-                      )
-                        .sort(([, a], [, b]) => b - a)
-                        .slice(0, 5)
-                        .map(([transportadora, quantidade]) => (
-                          <div key={transportadora} className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 truncate">{transportadora}</span>
-                            <span className="text-sm font-semibold text-gray-900">{quantidade}</span>
-                          </div>
-                        ))}
+                        )
+
+                        const topTransportadoras = Object.entries(transportadoraCount)
+                          .sort(([, a], [, b]) => b - a)
+                          .slice(0, 5)
+
+                        return topTransportadoras.length > 0 ? (
+                          topTransportadoras.map(([nome, count]) => (
+                            <div key={nome} className="flex justify-between items-center">
+                              <span className="text-gray-700">{nome}</span>
+                              <span className="font-semibold text-blue-600">{count}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-gray-500 text-center py-4">Nenhum dado de transportadora disponível</div>
+                        )
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-white/90 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-4 md:p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Quantidade por Destino/Origem</h3>
+                <Card className="bg-white/90 backdrop-blur-sm border-white/20">
+                  <CardHeader>
+                    <CardTitle className="text-gray-900 flex items-center">
+                      <span className="mr-2">📍</span>
+                      Top 5 Destinos/Origens
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <div className="space-y-2">
-                      {Object.entries(
-                        formularios.reduce(
-                          (acc, f) => {
-                            acc[f.destinoOrigem] = (acc[f.destinoOrigem] || 0) + 1
+                      {(() => {
+                        const destinoCount = formularios.reduce(
+                          (acc, form) => {
+                            if (form.destino_origem && form.destino_origem.trim()) {
+                              acc[form.destino_origem] = (acc[form.destino_origem] || 0) + 1
+                            }
                             return acc
                           },
                           {} as Record<string, number>,
-                        ),
-                      )
-                        .sort(([, a], [, b]) => b - a)
-                        .slice(0, 5)
-                        .map(([destino, quantidade]) => (
-                          <div key={destino} className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600 truncate">{destino}</span>
-                            <span className="text-sm font-semibold text-gray-900">{quantidade}</span>
-                          </div>
-                        ))}
+                        )
+
+                        const topDestinos = Object.entries(destinoCount)
+                          .sort(([, a], [, b]) => b - a)
+                          .slice(0, 5)
+
+                        return topDestinos.length > 0 ? (
+                          topDestinos.map(([nome, count]) => (
+                            <div key={nome} className="flex justify-between items-center">
+                              <span className="text-gray-700">{nome}</span>
+                              <span className="font-semibold text-green-600">{count}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-gray-500 text-center py-4">Nenhum dado de destino/origem disponível</div>
+                        )
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
@@ -1292,282 +1086,487 @@ export default function Home() {
             </div>
           )}
 
-          {/* Aba Sobre */}
           {activeTab === "sobre" && (
-            <div className="bg-black/10 backdrop-blur-sm rounded-lg shadow-md p-4 md:p-6">
-              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-blue-300 drop-shadow-lg">
-                Transpizzattolog
-              </h2>
-              <div className="prose max-w-none">
-                <p className="text-sm md:text-base text-white drop-shadow mb-4">
-                  A Transpizzattolog é uma empresa especializada em logística e transporte, oferecendo soluções
-                  completas para movimentação de cargas com excelência operacional e total segurança.
-                </p>
-                <p className="text-sm md:text-base text-white drop-shadow mb-4">
-                  Com anos de experiência no mercado, nossa equipe qualificada trabalha 24/7 para garantir entregas
-                  pontuais e operações eficientes, atendendo diversos segmentos industriais.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mt-6 md:mt-8">
-                  <div className="bg-blue-500/20 backdrop-blur-sm p-4 md:p-6 rounded-lg border border-white/20">
-                    <h3 className="font-semibold text-base md:text-lg mb-2 text-white drop-shadow">Nossa Missão</h3>
-                    <p className="text-sm md:text-base text-white drop-shadow">
-                      Oferecer serviços de transporte e logística com qualidade superior, garantindo a satisfação total
-                      dos nossos clientes através de soluções personalizadas e eficientes.
-                    </p>
-                  </div>
-                  <div className="bg-green-500/20 backdrop-blur-sm p-4 md:p-6 rounded-lg border border-white/20">
-                    <h3 className="font-semibold text-base md:text-lg mb-2 text-white drop-shadow">Nossa Visão</h3>
-                    <p className="text-sm md:text-base text-white drop-shadow">
-                      Ser referência nacional em transporte e logística, reconhecida pela confiabilidade, pontualidade e
-                      inovação em nossos serviços.
-                    </p>
-                  </div>
+            <div className="bg-gradient-to-br from-black/20 to-black/10 backdrop-blur-sm rounded-xl shadow-xl p-6 md:p-8">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-green-600 rounded-full mb-4">
+                  <Truck className="w-8 h-8 text-white" />
                 </div>
-                <div className="mt-6 md:mt-8 bg-black/20 backdrop-blur-sm p-4 md:p-6 rounded-lg border border-white/20">
-                  <h3 className="font-semibold text-base md:text-lg mb-4 text-white drop-shadow">Nossos Valores</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">🚛</div>
-                      <h4 className="font-medium mb-1 text-white drop-shadow">Confiabilidade</h4>
-                      <p className="text-xs md:text-sm text-white/80 drop-shadow">Compromisso com prazos e qualidade</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">🛡️</div>
-                      <h4 className="font-medium mb-1 text-white drop-shadow">Segurança</h4>
-                      <p className="text-xs md:text-sm text-white/80 drop-shadow">Proteção total da carga e equipe</p>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl mb-2">⚡</div>
-                      <h4 className="font-medium mb-1 text-white drop-shadow">Agilidade</h4>
-                      <p className="text-xs md:text-sm text-white/80 drop-shadow">Respostas rápidas e eficientes</p>
-                    </div>
-                  </div>
-                </div>
+                <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-2">
+                  Transpizzattolog
+                </h2>
+                <p className="text-white/80 text-lg">Excelência em Logística e Transporte</p>
               </div>
-            </div>
-          )}
 
-          {showChecklistForm && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Novo Checklist 5S</h3>
-                  <Button variant="ghost" size="sm" onClick={() => setShowChecklistForm(false)}>
-                    ✕
-                  </Button>
+              <div className="space-y-8">
+                <Card className="bg-gradient-to-r from-white/95 to-white/90 backdrop-blur-sm border-0 shadow-lg">
+                  <CardContent className="p-8">
+                    <div className="flex items-center mb-6">
+                      <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-600 rounded-full mr-4"></div>
+                      <h3 className="text-2xl font-bold text-gray-900">Nossa História</h3>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed text-lg">
+                      A Transpizzattolog é uma empresa líder no setor de logística e transporte, especializada em
+                      soluções integradas para movimentação de cargas. Com anos de experiência no mercado, oferecemos
+                      serviços de alta qualidade com foco na eficiência, segurança e pontualidade.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <Card className="bg-gradient-to-br from-blue-50 to-blue-100/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <CardContent className="p-8 text-center">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full mb-6">
+                        <Shield className="w-8 h-8 text-white" />
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 mb-3">Confiabilidade</h4>
+                      <p className="text-gray-700 leading-relaxed">
+                        Compromisso com a entrega segura e pontual de suas cargas
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-green-50 to-green-100/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <CardContent className="p-8 text-center">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full mb-6">
+                        <Users className="w-8 h-8 text-white" />
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 mb-3">Equipe Especializada</h4>
+                      <p className="text-gray-700 leading-relaxed">
+                        Profissionais qualificados e experientes em logística
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-orange-50 to-orange-100/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <CardContent className="p-8 text-center">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-6">
+                        <Truck className="w-8 h-8 text-white" />
+                      </div>
+                      <h4 className="text-xl font-bold text-gray-900 mb-3">Frota Moderna</h4>
+                      <p className="text-gray-700 leading-relaxed">
+                        Veículos modernos e bem mantidos para máxima eficiência
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Data</label>
-                      <Input
-                        type="date"
-                        value={currentChecklist.data}
-                        onChange={(e) => setCurrentChecklist({ ...currentChecklist, data: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Responsável</label>
-                      <Input
-                        value={currentChecklist.responsavel}
-                        onChange={(e) => setCurrentChecklist({ ...currentChecklist, responsavel: e.target.value })}
-                        placeholder="Nome do responsável"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Setor</label>
-                      <Input
-                        value={currentChecklist.setor}
-                        onChange={(e) => setCurrentChecklist({ ...currentChecklist, setor: e.target.value })}
-                        placeholder="Setor da empresa"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-medium">Itens do Checklist</h4>
-
-                    {/* Seiri */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          checked={currentChecklist.items.seiri.classificacao}
-                          onChange={(e) =>
-                            setCurrentChecklist({
-                              ...currentChecklist,
-                              items: {
-                                ...currentChecklist.items,
-                                seiri: { ...currentChecklist.items.seiri, classificacao: e.target.checked },
-                              },
-                            })
-                          }
-                        />
-                        <label className="font-medium">Seiri - Classificação</label>
+                <Card className="bg-gradient-to-r from-gray-900/90 to-black/80 backdrop-blur-sm border-0 shadow-lg">
+                  <CardContent className="p-8">
+                    <h3 className="text-2xl font-bold text-white text-center mb-8">Nossos Números</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                      <div>
+                        <div className="text-3xl font-bold text-blue-400 mb-2">500+</div>
+                        <div className="text-white/80">Entregas/Mês</div>
                       </div>
-                      <Input
-                        placeholder="Observações sobre classificação"
-                        value={currentChecklist.items.seiri.observacoes}
-                        onChange={(e) =>
-                          setCurrentChecklist({
-                            ...currentChecklist,
-                            items: {
-                              ...currentChecklist.items,
-                              seiri: { ...currentChecklist.items.seiri, observacoes: e.target.value },
-                            },
-                          })
-                        }
-                      />
-                    </div>
-
-                    {/* Seiton */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          checked={currentChecklist.items.seiton.organizacao}
-                          onChange={(e) =>
-                            setCurrentChecklist({
-                              ...currentChecklist,
-                              items: {
-                                ...currentChecklist.items,
-                                seiton: { ...currentChecklist.items.seiton, organizacao: e.target.checked },
-                              },
-                            })
-                          }
-                        />
-                        <label className="font-medium">Seiton - Organização</label>
+                      <div>
+                        <div className="text-3xl font-bold text-green-400 mb-2">98%</div>
+                        <div className="text-white/80">Pontualidade</div>
                       </div>
-                      <Input
-                        placeholder="Observações sobre organização"
-                        value={currentChecklist.items.seiton.observacoes}
-                        onChange={(e) =>
-                          setCurrentChecklist({
-                            ...currentChecklist,
-                            items: {
-                              ...currentChecklist.items,
-                              seiton: { ...currentChecklist.items.seiton, observacoes: e.target.value },
-                            },
-                          })
-                        }
-                      />
-                    </div>
-
-                    {/* Seiso */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          checked={currentChecklist.items.seiso.limpeza}
-                          onChange={(e) =>
-                            setCurrentChecklist({
-                              ...currentChecklist,
-                              items: {
-                                ...currentChecklist.items,
-                                seiso: { ...currentChecklist.items.seiso, limpeza: e.target.checked },
-                              },
-                            })
-                          }
-                        />
-                        <label className="font-medium">Seiso - Limpeza</label>
+                      <div>
+                        <div className="text-3xl font-bold text-orange-400 mb-2">50+</div>
+                        <div className="text-white/80">Veículos</div>
                       </div>
-                      <Input
-                        placeholder="Observações sobre limpeza"
-                        value={currentChecklist.items.seiso.observacoes}
-                        onChange={(e) =>
-                          setCurrentChecklist({
-                            ...currentChecklist,
-                            items: {
-                              ...currentChecklist.items,
-                              seiso: { ...currentChecklist.items.seiso, observacoes: e.target.value },
-                            },
-                          })
-                        }
-                      />
-                    </div>
-
-                    {/* Seiketsu */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          checked={currentChecklist.items.seiketsu.padronizacao}
-                          onChange={(e) =>
-                            setCurrentChecklist({
-                              ...currentChecklist,
-                              items: {
-                                ...currentChecklist.items,
-                                seiketsu: { ...currentChecklist.items.seiketsu, padronizacao: e.target.checked },
-                              },
-                            })
-                          }
-                        />
-                        <label className="font-medium">Seiketsu - Padronização</label>
+                      <div>
+                        <div className="text-3xl font-bold text-purple-400 mb-2">24/7</div>
+                        <div className="text-white/80">Suporte</div>
                       </div>
-                      <Input
-                        placeholder="Observações sobre padronização"
-                        value={currentChecklist.items.seiketsu.observacoes}
-                        onChange={(e) =>
-                          setCurrentChecklist({
-                            ...currentChecklist,
-                            items: {
-                              ...currentChecklist.items,
-                              seiketsu: { ...currentChecklist.items.seiketsu, observacoes: e.target.value },
-                            },
-                          })
-                        }
-                      />
                     </div>
-
-                    {/* Shitsuke */}
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <input
-                          type="checkbox"
-                          checked={currentChecklist.items.shitsuke.disciplina}
-                          onChange={(e) =>
-                            setCurrentChecklist({
-                              ...currentChecklist,
-                              items: {
-                                ...currentChecklist.items,
-                                shitsuke: { ...currentChecklist.items.shitsuke, disciplina: e.target.checked },
-                              },
-                            })
-                          }
-                        />
-                        <label className="font-medium">Shitsuke - Disciplina</label>
-                      </div>
-                      <Input
-                        placeholder="Observações sobre disciplina"
-                        value={currentChecklist.items.shitsuke.observacoes}
-                        onChange={(e) =>
-                          setCurrentChecklist({
-                            ...currentChecklist,
-                            items: {
-                              ...currentChecklist.items,
-                              shitsuke: { ...currentChecklist.items.shitsuke, observacoes: e.target.value },
-                            },
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-4">
-                    <Button onClick={handleAddChecklist} className="bg-green-600 hover:bg-green-700">
-                      Salvar Checklist
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowChecklistForm(false)}>
-                      Cancelar
-                    </Button>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           )}
         </main>
       </div>
+
+      <Dialog open={showColabPassword} onOpenChange={setShowColabPassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Digite a Senha</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              value={colabPassword}
+              onChange={(e) => setColabPassword(e.target.value)}
+              placeholder="Digite a senha"
+              className="mt-2"
+            />
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowColabPassword(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleColabPasswordSubmit}>Confirmar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showColabForm} onOpenChange={setShowColabForm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Colaborador</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nome">Nome</Label>
+              <Input
+                id="nome"
+                value={novoColaborador.nome}
+                onChange={(e) => setNovoColaborador({ ...novoColaborador, nome: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cargo">Cargo</Label>
+              <Input
+                id="cargo"
+                value={novoColaborador.cargo}
+                onChange={(e) => setNovoColaborador({ ...novoColaborador, cargo: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="turno">Turno</Label>
+              <Select
+                value={novoColaborador.turno}
+                onValueChange={(value) => setNovoColaborador({ ...novoColaborador, turno: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o turno" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1° turno">1° turno</SelectItem>
+                  <SelectItem value="2° turno">2° turno</SelectItem>
+                  <SelectItem value="3° turno">3° turno</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="foto">Foto</Label>
+              <Input
+                id="foto"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    const reader = new FileReader()
+                    reader.onload = (e) => {
+                      setNovoColaborador({ ...novoColaborador, foto: e.target?.result as string })
+                    }
+                    reader.readAsDataURL(file)
+                  }
+                }}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowColabForm(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddColaborador}>Adicionar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSegPassword} onOpenChange={setShowSegPassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Digite a Senha</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              value={segPassword}
+              onChange={(e) => setSegPassword(e.target.value)}
+              placeholder="Digite a senha"
+              className="mt-2"
+            />
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowSegPassword(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSegPasswordSubmit}>Confirmar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSegForm} onOpenChange={setShowSegForm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adicionar Foto de Segurança</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fotoSeg">Foto</Label>
+              <Input
+                id="fotoSeg"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    const reader = new FileReader()
+                    reader.onload = (e) => {
+                      setNovaFoto({
+                        file,
+                        preview: e.target?.result as string,
+                      })
+                    }
+                    reader.readAsDataURL(file)
+                  }
+                }}
+              />
+            </div>
+            {novaFoto.preview && (
+              <div className="space-y-2">
+                <Label>Preview</Label>
+                <img
+                  src={novaFoto.preview || "/placeholder.svg"}
+                  alt="Preview"
+                  className="w-full h-32 object-cover rounded"
+                />
+              </div>
+            )}
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowSegForm(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAddSeguranca}>Adicionar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showChecklistForm} onOpenChange={setShowChecklistForm}>
+        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Adicionar Checklist 5S</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddChecklist} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="data">Data</Label>
+                <Input
+                  id="data"
+                  type="date"
+                  value={currentChecklist.data}
+                  onChange={(e) => setCurrentChecklist({ ...currentChecklist, data: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="responsavel">Responsável</Label>
+                <Input
+                  id="responsavel"
+                  value={currentChecklist.responsavel}
+                  onChange={(e) => setCurrentChecklist({ ...currentChecklist, responsavel: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="setor">Setor</Label>
+              <Input
+                id="setor"
+                value={currentChecklist.setor}
+                onChange={(e) => setCurrentChecklist({ ...currentChecklist, setor: e.target.value })}
+              />
+            </div>
+
+            {/* 5S Items */}
+            <div className="space-y-4">
+              <h4 className="font-semibold">Itens do 5S</h4>
+
+              {/* Seiri */}
+              <div className="space-y-2 p-3 border rounded">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="seiri"
+                    checked={currentChecklist.items.seiri.classificacao}
+                    onChange={(e) =>
+                      setCurrentChecklist({
+                        ...currentChecklist,
+                        items: {
+                          ...currentChecklist.items,
+                          seiri: { ...currentChecklist.items.seiri, classificacao: e.target.checked },
+                        },
+                      })
+                    }
+                  />
+                  <Label htmlFor="seiri" className="font-medium">
+                    Seiri (Classificação)
+                  </Label>
+                </div>
+                <Input
+                  placeholder="Observações"
+                  value={currentChecklist.items.seiri.observacoes}
+                  onChange={(e) =>
+                    setCurrentChecklist({
+                      ...currentChecklist,
+                      items: {
+                        ...currentChecklist.items,
+                        seiri: { ...currentChecklist.items.seiri, observacoes: e.target.value },
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              {/* Seiton */}
+              <div className="space-y-2 p-3 border rounded">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="seiton"
+                    checked={currentChecklist.items.seiton.organizacao}
+                    onChange={(e) =>
+                      setCurrentChecklist({
+                        ...currentChecklist,
+                        items: {
+                          ...currentChecklist.items,
+                          seiton: { ...currentChecklist.items.seiton, organizacao: e.target.checked },
+                        },
+                      })
+                    }
+                  />
+                  <Label htmlFor="seiton" className="font-medium">
+                    Seiton (Organização)
+                  </Label>
+                </div>
+                <Input
+                  placeholder="Observações"
+                  value={currentChecklist.items.seiton.observacoes}
+                  onChange={(e) =>
+                    setCurrentChecklist({
+                      ...currentChecklist,
+                      items: {
+                        ...currentChecklist.items,
+                        seiton: { ...currentChecklist.items.seiton, observacoes: e.target.value },
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              {/* Seiso */}
+              <div className="space-y-2 p-3 border rounded">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="seiso"
+                    checked={currentChecklist.items.seiso.limpeza}
+                    onChange={(e) =>
+                      setCurrentChecklist({
+                        ...currentChecklist,
+                        items: {
+                          ...currentChecklist.items,
+                          seiso: { ...currentChecklist.items.seiso, limpeza: e.target.checked },
+                        },
+                      })
+                    }
+                  />
+                  <Label htmlFor="seiso" className="font-medium">
+                    Seiso (Limpeza)
+                  </Label>
+                </div>
+                <Input
+                  placeholder="Observações"
+                  value={currentChecklist.items.seiso.observacoes}
+                  onChange={(e) =>
+                    setCurrentChecklist({
+                      ...currentChecklist,
+                      items: {
+                        ...currentChecklist.items,
+                        seiso: { ...currentChecklist.items.seiso, observacoes: e.target.value },
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              {/* Seiketsu */}
+              <div className="space-y-2 p-3 border rounded">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="seiketsu"
+                    checked={currentChecklist.items.seiketsu.padronizacao}
+                    onChange={(e) =>
+                      setCurrentChecklist({
+                        ...currentChecklist,
+                        items: {
+                          ...currentChecklist.items,
+                          seiketsu: { ...currentChecklist.items.seiketsu, padronizacao: e.target.checked },
+                        },
+                      })
+                    }
+                  />
+                  <Label htmlFor="seiketsu" className="font-medium">
+                    Seiketsu (Padronização)
+                  </Label>
+                </div>
+                <Input
+                  placeholder="Observações"
+                  value={currentChecklist.items.seiketsu.observacoes}
+                  onChange={(e) =>
+                    setCurrentChecklist({
+                      ...currentChecklist,
+                      items: {
+                        ...currentChecklist.items,
+                        seiketsu: { ...currentChecklist.items.seiketsu, observacoes: e.target.value },
+                      },
+                    })
+                  }
+                />
+              </div>
+
+              {/* Shitsuke */}
+              <div className="space-y-2 p-3 border rounded">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="shitsuke"
+                    checked={currentChecklist.items.shitsuke.disciplina}
+                    onChange={(e) =>
+                      setCurrentChecklist({
+                        ...currentChecklist,
+                        items: {
+                          ...currentChecklist.items,
+                          shitsuke: { ...currentChecklist.items.shitsuke, disciplina: e.target.checked },
+                        },
+                      })
+                    }
+                  />
+                  <Label htmlFor="shitsuke" className="font-medium">
+                    Shitsuke (Disciplina)
+                  </Label>
+                </div>
+                <Input
+                  placeholder="Observações"
+                  value={currentChecklist.items.shitsuke.observacoes}
+                  onChange={(e) =>
+                    setCurrentChecklist({
+                      ...currentChecklist,
+                      items: {
+                        ...currentChecklist.items,
+                        shitsuke: { ...currentChecklist.items.shitsuke, observacoes: e.target.value },
+                      },
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button type="button" variant="outline" onClick={() => setShowChecklistForm(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">Adicionar Checklist</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
