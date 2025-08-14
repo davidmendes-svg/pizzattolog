@@ -22,6 +22,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FileText, Users, Shield, BarChart, Info, CheckSquare, Truck } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
+// Helper to resolve public asset URLs when deploying to GitHub Pages with basePath
+const asset = (path: string) => {
+  const base = process.env.NEXT_PUBLIC_BASE_PATH || ""
+  if (!path) return `${base}/placeholder.svg`
+  if (/^https?:\/\//.test(path)) return path
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`
+}
+
 interface FormData {
   cte: string
   destino: string
@@ -804,7 +812,7 @@ export default function Home() {
                   <Card key={colaborador.id} className="overflow-hidden relative">
                     <div className="aspect-square relative">
                       <img
-                        src={colaborador.foto || "/placeholder.svg"}
+                        src={asset(colaborador.foto || "/placeholder.svg")}
                         alt={colaborador.nome}
                         className="w-full h-full object-cover"
                       />
@@ -846,11 +854,11 @@ export default function Home() {
                 <div className="relative w-full max-w-2xl mx-auto">
                   <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden shadow-lg">
                     <img
-                      src={fotosSeguranca[currentPhotoIndex]?.foto || "/placeholder.svg"}
+                      src={asset(fotosSeguranca[currentPhotoIndex]?.foto || "/placeholder.svg")}
                       alt={`Foto de segurança ${currentPhotoIndex + 1}`}
                       className="w-full h-80 object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = "/placeholder.svg"
+                        e.currentTarget.src = asset("/placeholder.svg")
                       }}
                     />
                   </div>
@@ -1351,7 +1359,7 @@ export default function Home() {
               <div className="space-y-2">
                 <Label>Preview</Label>
                 <img
-                  src={novaFoto.preview || "/placeholder.svg"}
+                  src={asset(novaFoto.preview || "/placeholder.svg")}
                   alt="Preview"
                   className="w-full h-32 object-cover rounded"
                 />
