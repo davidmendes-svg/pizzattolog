@@ -1163,8 +1163,11 @@ export default function Home() {
                       <div>
                         <div className="text-3xl font-bold text-orange-400 mb-2">Valores</div>
                         <div className="text-white/80">• Somos comprometidos com o sucesso do cliente.
+                          
                                                        • Influenciamos positivamente nossos colaboradores.
+                          
                                                        • Estimulamos a inovação simples.
+                          
                                                        • Criamos espaços para diálogo com respeito e humildade.</div>
                       </div>
                       <div>
