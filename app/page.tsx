@@ -183,7 +183,10 @@ export default function Home() {
           )
         } else {
           // Dados padrão se não houver colaboradores no banco
-         
+          setColaboradores([
+            
+          ])
+        }
 
         if (segurancaData.length > 0) {
           setFotosSeguranca(
@@ -196,9 +199,7 @@ export default function Home() {
         } else {
           // Dados padrão se não houver fotos no banco
           setFotosSeguranca([
-            { id: 1, foto: "/warehouse-safety-inspection.png", data: "2024-01-15" },
-            { id: 2, foto: "/safety-equipment-check.png", data: "2024-01-14" },
-            { id: 3, foto: "/safety-training.png", data: "2024-01-13" },
+ 
           ])
         }
 
