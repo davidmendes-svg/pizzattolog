@@ -183,18 +183,7 @@ export default function Home() {
           )
         } else {
           // Dados padrão se não houver colaboradores no banco
-          setColaboradores([
-            { id: 1, nome: "João Silva", cargo: "Operador", turno: "turno", foto: "/professional-man.png" },
-            {
-              id: 2,
-              nome: "Maria Santos",
-              cargo: "Supervisora",
-              turno: "turno",
-              foto: "/professional-woman-diverse.png",
-            },
-            { id: 3, nome: "Carlos Lima", cargo: "Técnico", turno: "turno", foto: "/professional-person.png" },
-          ])
-        }
+         
 
         if (segurancaData.length > 0) {
           setFotosSeguranca(
