@@ -102,27 +102,6 @@ export default function Home() {
 
   // Estados para colaboradores
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([
-    {
-      id: 1,
-      nome: "João Silva",
-      cargo: "Operador de Empilhadeira",
-      turno: "1° turno",
-      foto: "/professional-man.png",
-    },
-    {
-      id: 2,
-      nome: "Maria Santos",
-      cargo: "Supervisora de Logística",
-      turno: "2° turno",
-      foto: "/professional-woman-diverse.png",
-    },
-    {
-      id: 3,
-      nome: "Carlos Oliveira",
-      cargo: "Conferente",
-      turno: "3° turno",
-      foto: "/professional-person.png",
-    },
   ])
   const [showColabPassword, setShowColabPassword] = useState(false)
   const [showColabForm, setShowColabForm] = useState(false)
@@ -140,9 +119,7 @@ export default function Home() {
 
   // Estados para segurança
   const [fotosSeguranca, setFotosSeguranca] = useState<FotoSeguranca[]>([
-    { id: 1, foto: "/warehouse-safety-inspection.png", data: "2024-01-15" },
-    { id: 2, foto: "/safety-equipment-check.png", data: "2024-01-14" },
-    { id: 3, foto: "/safety-training.png", data: "2024-01-13" },
+    
   ])
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [showSegPassword, setShowSegPassword] = useState(false)
@@ -1266,6 +1243,7 @@ export default function Home() {
                   <SelectItem value="1° turno">1° turno</SelectItem>
                   <SelectItem value="2° turno">2° turno</SelectItem>
                   <SelectItem value="3° turno">3° turno</SelectItem>
+                  <SelectItem value="adm">ADM</SelectItem>
                 </SelectContent>
               </Select>
             </div>
