@@ -1088,7 +1088,7 @@ export default function Home() {
                   <Truck className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-2">
-                  Transpizzattolog
+                  Pizzattolog
                 </h2>
                 <p className="text-white/80 text-lg">Excelência em Logística e Transporte</p>
               </div>
@@ -1101,9 +1101,11 @@ export default function Home() {
                       <h3 className="text-2xl font-bold text-gray-900">Nossa História</h3>
                     </div>
                     <p className="text-gray-700 leading-relaxed text-lg">
-                      A Transpizzattolog é uma empresa líder no setor de logística e transporte, especializada em
-                      soluções integradas para movimentação de cargas. Com anos de experiência no mercado, oferecemos
-                      serviços de alta qualidade com foco na eficiência, segurança e pontualidade.
+                      Nosso propósito é prover soluções completas de logística oferecendo serviços que atendam as necessidades presentes em todas as etapas da cadeia de suprimentos.
+                      Somos movidos por desafios, buscando constantemente a inovação e o desenvolvimento, garantindo a confiança, qualidade e a satisfação dos nossos clientes.
+                      Temos ampla atuação com unidades estrategicamente localizadas, prestando serviços de projetos customizados para todos os tipos de operações em transportes de cargas e operador logístico.
+
+                      Ao longo de 49 anos evoluímos e ampliamos nossa capacidade de atendimento, investindo na capacitação de pessoas, estrutura, equipamentos e tecnologia, entregando os mais altos níveis de qualidade de atendimento
                     </p>
                   </CardContent>
                 </Card>
@@ -1148,19 +1150,22 @@ export default function Home() {
 
                 <Card className="bg-gradient-to-r from-gray-900/90 to-black/80 backdrop-blur-sm border-0 shadow-lg">
                   <CardContent className="p-8">
-                    <h3 className="text-2xl font-bold text-white text-center mb-8">Nossos Números</h3>
+                    <h3 className="text-2xl font-bold text-white text-center mb-8">Ideologia</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                       <div>
-                        <div className="text-3xl font-bold text-blue-400 mb-2">500+</div>
-                        <div className="text-white/80">Entregas/Mês</div>
+                        <div className="text-3xl font-bold text-blue-400 mb-2">Propósitos</div>
+                        <div className="text-white/80">Simplificar soluções para cuidar do que importa.</div>
                       </div>
                       <div>
-                        <div className="text-3xl font-bold text-green-400 mb-2">98%</div>
-                        <div className="text-white/80">Pontualidade</div>
+                        <div className="text-3xl font-bold text-green-400 mb-2">Visão</div>
+                        <div className="text-white/80">Duplicar a receita e integrar a cadeia produtiva dos nossos clientes.</div>
                       </div>
                       <div>
-                        <div className="text-3xl font-bold text-orange-400 mb-2">50+</div>
-                        <div className="text-white/80">Veículos</div>
+                        <div className="text-3xl font-bold text-orange-400 mb-2">Valores</div>
+                        <div className="text-white/80">• Somos comprometidos com o sucesso do cliente.
+                                                       • Influenciamos positivamente nossos colaboradores.
+                                                       • Estimulamos a inovação simples.
+                                                       • Criamos espaços para diálogo com respeito e humildade.</div>
                       </div>
                       <div>
                         <div className="text-3xl font-bold text-purple-400 mb-2">24/7</div>
@@ -1233,7 +1238,7 @@ export default function Home() {
                   <SelectItem value="1° turno">1° turno</SelectItem>
                   <SelectItem value="2° turno">2° turno</SelectItem>
                   <SelectItem value="3° turno">3° turno</SelectItem>
-                  <SelectItem value="adm">ADM</SelectItem>
+                  <SelectItem value="ADM">Adm</SelectItem>
                 </SelectContent>
               </Select>
             </div>
