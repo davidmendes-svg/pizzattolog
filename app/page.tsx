@@ -1104,8 +1104,7 @@ export default function Home() {
                       Nosso propósito é prover soluções completas de logística oferecendo serviços que atendam as necessidades presentes em todas as etapas da cadeia de suprimentos.
                       Somos movidos por desafios, buscando constantemente a inovação e o desenvolvimento, garantindo a confiança, qualidade e a satisfação dos nossos clientes.
                       Temos ampla atuação com unidades estrategicamente localizadas, prestando serviços de projetos customizados para todos os tipos de operações em transportes de cargas e operador logístico.
-
-                      Ao longo de 49 anos evoluímos e ampliamos nossa capacidade de atendimento, investindo na capacitação de pessoas, estrutura, equipamentos e tecnologia, entregando os mais altos níveis de qualidade de atendimento
+                      \nAo longo de 49 anos evoluímos e ampliamos nossa capacidade de atendimento, investindo na capacitação de pessoas, estrutura, equipamentos e tecnologia, entregando os mais altos níveis de qualidade de atendimento
                     </p>
                   </CardContent>
                 </Card>
@@ -1162,13 +1161,8 @@ export default function Home() {
                       </div>
                       <div>
                         <div className="text-3xl font-bold text-orange-400 mb-2">Valores</div>
-                        <div className="text-white/80">• Somos comprometidos com o sucesso do cliente.
-                          
-                                                       • Influenciamos positivamente nossos colaboradores.
-                          
-                                                       • Estimulamos a inovação simples.
-                          
-                                                       • Criamos espaços para diálogo com respeito e humildade.</div>
+                        <div className="text-white/80">• Somos comprometidos com o sucesso do cliente. \n• Influenciamos positivamente nossos colaboradores. \n • Estimulamos a inovação simples.
+                        \n• Criamos espaços para diálogo com respeito e humildade.</div>
                       </div>
                       <div>
                         <div className="text-3xl font-bold text-purple-400 mb-2">24/7</div>
