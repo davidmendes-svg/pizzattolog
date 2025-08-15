@@ -34,6 +34,7 @@ interface FormData {
   inicio: string
   chegada: string
   termino: string
+  turno: string
 }
 
 interface Colaborador {
@@ -97,6 +98,7 @@ export default function Home() {
     inicio: "",
     chegada: "",
     termino: "",
+    turno: "",
   })
   const [formularios, setFormularios] = useState<FormData[]>([])
 
@@ -242,6 +244,7 @@ export default function Home() {
         inicio: formData.inicio,
         chegada: formData.chegada,
         termino: formData.termino,
+        turno: formData.turno,
       })
 
       if (result.success) {
@@ -258,6 +261,7 @@ export default function Home() {
           inicio: "",
           chegada: "",
           termino: "",
+          turno: "",
         })
         // Recarregar dados
         const novosFormularios = await buscarFormularios()
@@ -748,6 +752,25 @@ export default function Home() {
                       className="w-full bg-white border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all"
                     />
                   </div>
+                   <div className="space-y-2">
+                    <Label htmlFor="turno" className="text-white font-semibold drop-shadow-md">
+                     Turno
+                    </Label>
+                    <Select
+                      value={formData.turno}
+                      onValueChange={(value) => setFormData({ ...formData, turno: value })}
+                    >
+                      <SelectTrigger className="w-full bg-white border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all">
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 shadow-lg">
+                        <SelectItem value="1°turno">1°turno</SelectItem>
+                        <SelectItem value="2°turno">2°turno</SelectItem>
+                        <SelectItem value="3°turno">3°turno</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
 
                   <div className="col-span-1 md:col-span-2 lg:col-span-3 flex justify-center mt-6">
                     <Button
@@ -1237,7 +1260,7 @@ export default function Home() {
                   <SelectItem value="1° turno">1° turno</SelectItem>
                   <SelectItem value="2° turno">2° turno</SelectItem>
                   <SelectItem value="3° turno">3° turno</SelectItem>
-                  <SelectItem value="ADM">Adm</SelectItem>
+                  <SelectItem value="ADM">ADM</SelectItem>
                 </SelectContent>
               </Select>
             </div>
